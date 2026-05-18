@@ -1,9 +1,10 @@
 # Mobile Interaction Platform
 
-A physical Cartesian XY-gantry rig that lets a host computer remotely view and control a smartphone touchscreen.
+Software automation platform that uses computer vision to plan smartphone interactions and generate G-code commands for GRBL-compatible XY-gantry systems.
 
 ## Docs
 
-- [Architecture Overview](docs/overview.md)
+- [Overview](docs/overview.md)
 - [Requirements](docs/requirements.md)
-- [System Components](docs/components.md)
+- [Components](docs/components.md)
+- [Roadmap](docs/roadmap.md)

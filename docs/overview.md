@@ -1,12 +1,12 @@
-# Architecture Overview
-
-Camera &rarr; Perception &rarr; Interaction Planning &rarr; Motion Control &rarr; Physical Actuation
+# Overview
 
 ## Subsystems
 
+Camera &rarr; Perception &rarr; Interaction Planning &rarr; Motion Control &rarr; Physical Actuation
+
 ### 1. Camera (Onboard Hardware)
 
-Input: captures raw camera frames
+Input: captures raw camera frames  
 Output: sends frames to the laptop for processing
 
 - Camera mounted to see the phone screen clearly from a fixed angle.
@@ -14,7 +14,7 @@ Output: sends frames to the laptop for processing
 
 ### 2. Perception (External Laptop)
 
-Input: raw camera frames
+Input: raw camera frames  
 Output: perceived states / vision functions
 
 - Derives states from camera frames.
@@ -24,7 +24,7 @@ Output: perceived states / vision functions
 
 ### 3. Interaction Planning (External Laptop)
 
-Input: perceived states / vision functions
+Input: perceived states / vision functions  
 Output: high-level actions
 
 - Interprets perceived states and uses vision functions to determine appropriate action sequences to complete desired tasks.
@@ -33,8 +33,8 @@ Output: high-level actions
 
 ### 4. Motion Control (External Laptop)
 
-Input: high-level actions
-Output: low-level motor and servo signals
+Input: high-level actions  
+Output: G-code motion commands sent via USB serial
 
 - Convert user intent like tap, press, and swipe into reusable functions.
 - Maps high-level touch gestures onto gantry motion and actuator behavior.
@@ -42,8 +42,17 @@ Output: low-level motor and servo signals
 
 ### 5. Physical Actuation (Onboard Hardware)
 
-Input: low-level motor and servo signals
+Input: G-code motion commands sent via USB serial  
 Output: stylus movement and touch
 
 - Gantry system that moves the stylus across the phone screen.
 - Uses X/Y belt driven stepper motors and a servo for Z-axis touch actuator.
+- GRBL firmware interprets G-code and generates stepping/servo signals (pretty much done for me)
+
+## Coordinate System Mapping
+
+## Communication Protocols
+
+## Gesture Primitives
+
+## Calibration Workflow
