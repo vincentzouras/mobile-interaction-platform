@@ -4,15 +4,13 @@
 #include <string>
 #include <vector>
 
+/**
+ * @brief UDP unicast transmitter for RPi to send camera frames to laptop
+ *
+ */
 class UDPTransmitter {
    public:
-    /**
-     * @brief Construct a new UDPTransmitter object
-     *
-     * @param host Target host IP address
-     * @param port Target port number
-     */
-    UDPTransmitter(const std::string& host, int port);
+    UDPTransmitter(const std::string& host, int port = 5001);
     ~UDPTransmitter();
 
     bool send(const std::vector<uint8_t>& data);

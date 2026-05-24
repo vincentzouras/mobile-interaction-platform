@@ -17,7 +17,6 @@ class TCPServer {
     bool send(const std::vector<uint8_t>& data);
 
    private:
-    int port;
     int server_fd;
     int client_fd;
 };

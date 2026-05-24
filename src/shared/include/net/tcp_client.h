@@ -9,12 +9,6 @@
  */
 class TCPClient {
    public:
-    /**
-     * @brief Construct a new TCPClient object
-     *
-     * @param host Target host IP address
-     * @param port Target port number
-     */
     TCPClient(const std::string& host, int port = 5000);
     ~TCPClient();
 

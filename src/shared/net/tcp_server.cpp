@@ -8,7 +8,7 @@
 #include <cstring>
 #include <iostream>
 
-TCPServer::TCPServer(int port) : port(port), server_fd(-1), client_fd(-1) {
+TCPServer::TCPServer(int port) : server_fd(-1), client_fd(-1) {
     // Create server socket
     server_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (server_fd < 0) {

@@ -10,11 +10,9 @@ class UDPReceiver {
    public:
     std::atomic<bool> running{false};
 
-    UDPReceiver(int port);
+    UDPReceiver(int port = 5001);
     ~UDPReceiver();
 
-    bool start();
-    void stop();
     std::vector<uint8_t> recv();
 
    private:
