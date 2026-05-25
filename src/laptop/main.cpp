@@ -29,7 +29,7 @@ int main(int argc, char* argv[]) {
         UDPReceiver receiver;
 
         // Spawn UDP receiver thread
-        std::thread udp_thread([&receiver]() {
+        std::jthread udp_thread([&receiver]() {
             std::cout << "[UDP Thread] Started listening for video frames...\n";
             while (receiver.running) {
                 auto data = receiver.recv();  // blocks at most 100ms
@@ -75,9 +75,9 @@ int main(int argc, char* argv[]) {
         receiver.running = false;
 
         // Wait for UDP thread to finish
-        if (udp_thread.joinable()) {
-            udp_thread.join();
-        }
+        // if (udp_thread.joinable()) {
+        //     udp_thread.join();
+        // }
     } catch (const std::exception& e) {
         std::cerr << "[Main] Critical Error: " << e.what() << "\n";
         return 1;

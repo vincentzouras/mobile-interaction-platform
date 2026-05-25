@@ -32,7 +32,7 @@ int main(int argc, char* argv[]) {
         std::vector<uint8_t> dummy_data(1024, 0xFF);
 
         // Spawn communication threads
-        std::thread tcp_thread([&tcp_server]() {
+        std::jthread tcp_thread([&tcp_server]() {
             std::cout << "[TCP Thread] Started.\n";
             // Constantly listen for commands from laptop
             while (tcp_server.running) {
@@ -45,7 +45,7 @@ int main(int argc, char* argv[]) {
             }
             std::cout << "[TCP Thread] Stopped.\n";
         });
-        std::thread udp_thread([&udp_transmitter, &dummy_data]() {
+        std::jthread udp_thread([&udp_transmitter, &dummy_data]() {
             std::cout << "[UDP Thread] Started.\n";
             // Constantly send most recent camera frame to laptop
             while (udp_transmitter.running) {
@@ -72,12 +72,12 @@ int main(int argc, char* argv[]) {
         udp_transmitter.running = false;
 
         // Wait for threads to finish (guaranteed to exit within 100ms due to socket timeouts)
-        if (tcp_thread.joinable()) {
-            tcp_thread.join();
-        }
-        if (udp_thread.joinable()) {
-            udp_thread.join();
-        }
+        // if (tcp_thread.joinable()) {
+        //     tcp_thread.join();
+        // }
+        // if (udp_thread.joinable()) {
+        //     udp_thread.join();
+        // }
         std::cout << "[Main] All threads joined. Exiting...\n";
     } catch (const std::exception& e) {
         std::cerr << "[Main] Critical Error: " << e.what() << "\n";
