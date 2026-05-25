@@ -51,7 +51,7 @@ int main(int argc, char* argv[]) {
             // Constantly send most recent camera frame to laptop
             while (udp_transmitter.running) {
                 udp_transmitter.send(dummy_data);
-                std::this_thread::sleep_for(std::chrono::milliseconds(33));  // ~30 FPS
+                std::this_thread::sleep_for(std::chrono::seconds(5));
             }
             std::cout << "[UDP Thread] Stopped.\n";
         });

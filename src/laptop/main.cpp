@@ -45,7 +45,7 @@ int main(int argc, char* argv[]) {
 
         // Keep connecting until RPi is online
         std::cout << "[Main] Attempting to connect to RPi...\n";
-        while (true) {
+        while (!g_quit) {
             if (client.connect()) {
                 break;  // Success!
             }
