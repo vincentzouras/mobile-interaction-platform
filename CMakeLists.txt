@@ -15,21 +15,42 @@ add_library(shared_net
     src/shared/net/udp_transmitter.cpp
     src/shared/net/udp_receiver.cpp
 )
-target_include_directories(shared_net PUBLIC ${CMAKE_SOURCE_DIR}/src/shared/include)
-target_link_libraries(shared_net PRIVATE pthread)
+target_include_directories(shared_net PUBLIC 
+    ${CMAKE_SOURCE_DIR}/src/shared/include
+)
+target_link_libraries(shared_net PRIVATE 
+    pthread
+)
 
 # RPi executable
 add_executable(rpi 
     src/rpi/main.cpp
     src/rpi/perception/camera.cpp
 )
-target_link_libraries(rpi PRIVATE shared_net pthread ${OpenCV_LIBS})
+target_link_libraries(rpi PRIVATE 
+    shared_net 
+    pthread 
+    ${OpenCV_LIBS}
+)
+target_include_directories(rpi PRIVATE 
+    ${OpenCV_INCLUDE_DIRS} 
+    ${CMAKE_SOURCE_DIR}/src/rpi/include
+)
 
 # Laptop executable
 add_executable(laptop
     src/laptop/main.cpp
 )
-target_link_libraries(laptop PRIVATE shared_net pthread ${OpenCV_LIBS})
+target_link_libraries(laptop PRIVATE 
+    shared_net 
+    pthread 
+    ${OpenCV_LIBS}
+)
+target_include_directories(laptop PRIVATE 
+    ${OpenCV_INCLUDE_DIRS} 
+    ${CMAKE_SOURCE_DIR}/src/laptop/include
+)
+
 
 # Compiler flags
 if(UNIX)

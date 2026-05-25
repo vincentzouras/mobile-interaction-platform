@@ -43,7 +43,7 @@ UDPReceiver::UDPReceiver(int port) : port(port), socket_fd(-1) {
     running = true;
     std::cout << "[UDP] Bound to port " << port << "\n";
 
-    buffer.resize(net::MAX_UDP_DATAGRAM_SIZE);
+    buffer.resize(net::MAX_UDP_PACKET_SIZE);
 }
 
 UDPReceiver::~UDPReceiver() {

@@ -7,6 +7,7 @@
 
 #include "net/tcp_server.h"
 #include "net/udp_transmitter.h"
+#include "perception/camera.h"
 
 std::atomic<bool> g_quit{false};
 
@@ -29,7 +30,7 @@ int main(int argc, char* argv[]) {
         UDPTransmitter udp_transmitter(host);  // throws
 
         // Dummy frame buffer (will be replaced with actual camera frames)
-        std::vector<uint8_t> dummy_data(1024 * 64, 0xFF);
+        std::vector<uint8_t> dummy_data(1024, 0xFF);
 
         // Spawn communication threads
         std::jthread tcp_thread([&tcp_server]() {
@@ -48,8 +49,18 @@ int main(int argc, char* argv[]) {
         });
         std::jthread udp_thread([&udp_transmitter, &dummy_data]() {
             std::cout << "[UDP Thread] Started.\n";
+
+            Camera camera;
+            cv::Mat frame;
+
             // Constantly send most recent camera frame to laptop
             while (udp_transmitter.running) {
+                if (camera.grab_frame(frame)) {
+                    std::cout << "[UDP Thread] Success frame capture.\n";
+                } else {
+                    std::cerr << "[UDP Thread] Warning: Failed to grab frame from camera.\n";
+                }
+
                 udp_transmitter.send(dummy_data);
                 std::this_thread::sleep_for(std::chrono::seconds(5));
             }
