@@ -6,8 +6,11 @@
 #include <cstring>
 #include <iostream>
 
+#include "net/config.h"
+
 TCPClient::TCPClient(const std::string& host, int port) : host(host), port(port), client_fd(-1) {
     std::cout << "[TCP] Client initialized for target " << host << ":" << port << "\n";
+    buffer.resize(net::OS_PAGE_SIZE);
 }
 
 TCPClient::~TCPClient() {
@@ -84,7 +87,6 @@ std::vector<uint8_t> TCPClient::recv() {
         return {};
     }
 
-    std::vector<uint8_t> buffer(256);
     int n = ::recv(client_fd, buffer.data(), buffer.size() - 1, 0);
     if (n < 0) {
         // Ignore timeout errors
@@ -105,6 +107,5 @@ std::vector<uint8_t> TCPClient::recv() {
         return {};
     }
 
-    buffer.resize(n);
-    return buffer;
+    return std::vector<uint8_t>(buffer.begin(), buffer.begin() + n);
 }

@@ -8,6 +8,8 @@
 #include <cstring>
 #include <iostream>
 
+#include "net/config.h"
+
 TCPServer::TCPServer(int port) : server_fd(-1), client_fd(-1) {
     // Create server socket
     server_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -46,6 +48,8 @@ TCPServer::TCPServer(int port) : server_fd(-1), client_fd(-1) {
 
     running = true;
     std::cout << "[TCP] Listening on port " << port << "\n";
+
+    buffer.resize(net::OS_PAGE_SIZE);
 }
 
 TCPServer::~TCPServer() {
@@ -89,7 +93,6 @@ std::vector<uint8_t> TCPServer::recv() {
         }
     }
 
-    std::vector<uint8_t> buffer(256);
     int n = ::recv(client_fd, buffer.data(), buffer.size() - 1, 0);
     if (n < 0) {
         // Don't close on timeout errors
@@ -110,8 +113,7 @@ std::vector<uint8_t> TCPServer::recv() {
         return {};
     }
 
-    buffer.resize(n);
-    return buffer;
+    return std::vector<uint8_t>(buffer.begin(), buffer.begin() + n);
 }
 
 bool TCPServer::send(const std::vector<uint8_t>& data) {

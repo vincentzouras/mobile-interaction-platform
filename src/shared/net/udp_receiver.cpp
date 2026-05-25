@@ -5,6 +5,8 @@
 
 #include <iostream>
 
+#include "net/config.h"
+
 UDPReceiver::UDPReceiver(int port) : port(port), socket_fd(-1) {
     // Create socket
     socket_fd = socket(AF_INET, SOCK_DGRAM, 0);
@@ -40,6 +42,8 @@ UDPReceiver::UDPReceiver(int port) : port(port), socket_fd(-1) {
 
     running = true;
     std::cout << "[UDP] Bound to port " << port << "\n";
+
+    buffer.resize(net::MAX_UDP_DATAGRAM_SIZE);
 }
 
 UDPReceiver::~UDPReceiver() {
@@ -57,7 +61,6 @@ std::vector<uint8_t> UDPReceiver::recv() {
         return {};
     }
 
-    std::vector<uint8_t> buffer(65536);  // Max datagram size 64KB
     int n = recvfrom(socket_fd, buffer.data(), buffer.size(), 0, nullptr, nullptr);  // blocks
     if (n < 0) {
         // Don't treat timeout as an error
@@ -69,6 +72,6 @@ std::vector<uint8_t> UDPReceiver::recv() {
         return {};
     }
 
-    buffer.resize(n);
-    return buffer;
+    // Return copy of only valid portion of buffer
+    return std::vector<uint8_t>(buffer.begin(), buffer.begin() + n);
 }
