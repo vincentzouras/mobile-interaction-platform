@@ -39,7 +39,7 @@ int main(int argc, char* argv[]) {
                 std::vector<uint8_t> command = tcp_server.recv();  // blocks at most 100ms
                 if (!command.empty()) {
                     std::cout << "[TCP Thread] Received: "
-                              << std::string(command.begin(), command.end()) << "\n";
+                              << std::string(command.begin(), command.end());
                     tcp_server.send(std::vector<uint8_t>({'O', 'K', '\n'}));
                 }
             }

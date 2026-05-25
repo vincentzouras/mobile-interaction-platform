@@ -1,4 +1,5 @@
 #include <atomic>
+#include <csignal>
 #include <iostream>
 #include <string>
 #include <thread>
@@ -7,7 +8,18 @@
 #include "net/udp_receiver.h"
 #include "net/udp_transmitter.h"
 
+std::atomic<bool> g_quit{false};
+
+void signal_handler(int signum) {
+    std::cout << "\n[Main] Interrupt signal (" << signum << ") received. Initiating shutdown...\n";
+    g_quit = true;
+}
+
 int main(int argc, char* argv[]) {
+    // Register signal handler for graceful shutdown
+    std::signal(SIGINT, signal_handler);
+    std::signal(SIGTERM, signal_handler);
+
     std::cout << "[Main] Starting laptop client...\n";
 
     try {
@@ -43,13 +55,9 @@ int main(int argc, char* argv[]) {
         // Main loop, read user commands
         std::cout << "\n[Main] Ready for commands.\n";
         std::string command;
-        while (true) {
-            std::cout << "Enter command (or 'exit' to quit): ";
-            std::getline(std::cin, command);
-
-            if (command == "exit") {
-                break;
-            }
+        while (!g_quit) {
+            std::cout << "Command: ";
+            if (!std::getline(std::cin, command)) break;
 
             // Convert string to bytes
             std::vector<uint8_t> data(command.begin(), command.end());
