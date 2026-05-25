@@ -38,9 +38,10 @@ int main(int argc, char* argv[]) {
             while (tcp_server.running) {
                 std::vector<uint8_t> command = tcp_server.recv();  // blocks at most 100ms
                 if (!command.empty()) {
-                    std::cout << "[TCP Thread] Received: "
+                    std::cout << "\n[TCP Thread] Received: "
                               << std::string(command.begin(), command.end());
                     tcp_server.send(std::vector<uint8_t>({'O', 'K', '\n'}));
+                    std::cout << "\n";
                 }
             }
             std::cout << "[TCP Thread] Stopped.\n";
@@ -56,7 +57,7 @@ int main(int argc, char* argv[]) {
         });
 
         // Main control loop
-        std::cout << "[Main] Entering main control loop (Ctrl+C to stop)...\n";
+        std::cout << "[Main] Entering main control loop...\n";
         while (!g_quit) {
             std::cout << "[Main] Control loop tick...\n";
             // TODO: Perception, Planning, Motion Control
@@ -64,8 +65,6 @@ int main(int argc, char* argv[]) {
         }
 
         // Graceful shutdown
-
-        std::cout << "[Main] Shutting down, signaling threads...\n";
 
         // Tell threads to stop looping
         tcp_server.running = false;

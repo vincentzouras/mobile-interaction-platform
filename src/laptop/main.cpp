@@ -13,6 +13,7 @@ std::atomic<bool> g_quit{false};
 void signal_handler(int signum) {
     std::cout << "\n[Main] Interrupt signal (" << signum << ") received. Initiating shutdown...\n";
     g_quit = true;
+    close(STDIN_FILENO);  // Unblock std::getline when we send Ctrl+C to shutdown
 }
 
 int main(int argc, char* argv[]) {
@@ -77,7 +78,6 @@ int main(int argc, char* argv[]) {
         }
 
         // Graceful shutdown
-        std::cout << "\n[Main] Shutting down...\n";
 
         // Signal the UDP thread to stop looping
         receiver.running = false;
@@ -86,6 +86,8 @@ int main(int argc, char* argv[]) {
         // if (udp_thread.joinable()) {
         //     udp_thread.join();
         // }
+
+        std::cout << "[Main] Joining UDP thread...\n";
     } catch (const std::exception& e) {
         std::cerr << "[Main] Critical Error: " << e.what() << "\n";
         return 1;
