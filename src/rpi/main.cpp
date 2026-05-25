@@ -78,7 +78,7 @@ int main(int argc, char* argv[]) {
         // if (udp_thread.joinable()) {
         //     udp_thread.join();
         // }
-        std::cout << "[Main] All threads joined. Exiting...\n";
+        std::cout << "[Main] Joining threads...\n";
     } catch (const std::exception& e) {
         std::cerr << "[Main] Critical Error: " << e.what() << "\n";
         return 1;

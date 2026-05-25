@@ -26,6 +26,7 @@ UDPTransmitter::~UDPTransmitter() {
     }
 
     running = false;
+    std::cout << "[UDP] Stopped\n";
 }
 
 bool UDPTransmitter::send(const std::vector<uint8_t>& data) {
