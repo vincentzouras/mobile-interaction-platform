@@ -43,37 +43,42 @@ int main(int argc, char* argv[]) {
         std::string host = argc > 1 ? argv[1] : "192.168.4.21";
         TCPClient client(host);
 
-        // Keep connecting until RPi is online
-        std::cout << "[Main] Attempting to connect to RPi...\n";
         while (!g_quit) {
-            if (client.connect()) {
-                break;  // Success!
-            }
-            std::cout << "[Main] RPi not found. Retrying in 2 seconds...\n";
-            std::this_thread::sleep_for(std::chrono::seconds(2));
-        }
-
-        // Main loop, read user commands
-        std::cout << "\n[Main] Ready for commands.\n";
-        std::string command;
-        while (!g_quit) {
-            std::cout << "Command: ";
-            if (!std::getline(std::cin, command)) break;
-
-            // Convert string to bytes
-            std::vector<uint8_t> data(command.begin(), command.end());
-            data.push_back('\n');
-
-            if (client.send(data)) {
-                std::vector<uint8_t> response = client.recv();
-                if (!response.empty()) {
-                    std::cout << "RPi Response: " << std::string(response.begin(), response.end())
-                              << "\n";
+            // STATE 1
+            // Keep connecting until RPi is online
+            std::cout << "[Main] Attempting to connect to RPi...\n";
+            while (!g_quit) {
+                if (client.connect()) {
+                    break;  // Success!
                 }
-            } else {
-                // If send fails, the Pi disconnected. We should probably exit or try to reconnect.
-                std::cout << "[Main] Connection to Pi lost!\n";
-                break;
+                std::cout << "[Main] RPi not found. Retrying in 2 seconds...\n";
+                std::this_thread::sleep_for(std::chrono::seconds(2));
+            }
+
+            // STATE 2
+            // Main loop, read user commands
+            std::cout << "\n[Main] Ready for commands.\n";
+            std::string command;
+            while (!g_quit) {
+                std::cout << "Command: ";
+                if (!std::getline(std::cin, command)) break;
+
+                // Convert string to bytes
+                std::vector<uint8_t> data(command.begin(), command.end());
+                data.push_back('\n');
+
+                if (client.send(data)) {
+                    std::vector<uint8_t> response = client.recv();
+                    if (!response.empty()) {
+                        std::cout << "RPi Response: "
+                                  << std::string(response.begin(), response.end()) << "\n";
+                    }
+                } else {
+                    // If send fails, the Pi disconnected. We should probably exit or try to
+                    // reconnect.
+                    std::cout << "[Main] Connection to Pi lost!\n";
+                    break;
+                }
             }
         }
 

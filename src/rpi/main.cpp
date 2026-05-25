@@ -29,7 +29,7 @@ int main(int argc, char* argv[]) {
         UDPTransmitter udp_transmitter(host);  // throws
 
         // Dummy frame buffer (will be replaced with actual camera frames)
-        std::vector<uint8_t> dummy_data(1024, 0xFF);
+        std::vector<uint8_t> dummy_data(1024 * 64, 0xFF);
 
         // Spawn communication threads
         std::jthread tcp_thread([&tcp_server]() {
