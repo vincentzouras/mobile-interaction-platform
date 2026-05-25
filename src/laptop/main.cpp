@@ -11,20 +11,6 @@ int main(int argc, char* argv[]) {
     std::cout << "[Main] Starting laptop client...\n";
 
     try {
-        // Create TCP client to connect with RPi and send commands
-        std::string host = argc > 1 ? argv[1] : "192.168.4.21";
-        TCPClient client(host);
-
-        // Keep connecting until RPi is online
-        std::cout << "[Main] Attempting to connect to RPi...\n";
-        while (true) {
-            if (client.connect()) {
-                break;  // Success!
-            }
-            std::cout << "[Main] RPi not found. Retrying in 2 seconds...\n";
-            std::this_thread::sleep_for(std::chrono::seconds(2));
-        }
-
         // Create UDP receiver to get video frames from RPi
         UDPReceiver receiver;
 
@@ -39,6 +25,20 @@ int main(int argc, char* argv[]) {
             }
             std::cout << "[UDP Thread] Exited cleanly.\n";
         });
+
+        // Create TCP client to connect with RPi and send commands
+        std::string host = argc > 1 ? argv[1] : "192.168.4.21";
+        TCPClient client(host);
+
+        // Keep connecting until RPi is online
+        std::cout << "[Main] Attempting to connect to RPi...\n";
+        while (true) {
+            if (client.connect()) {
+                break;  // Success!
+            }
+            std::cout << "[Main] RPi not found. Retrying in 2 seconds...\n";
+            std::this_thread::sleep_for(std::chrono::seconds(2));
+        }
 
         // Main loop, read user commands
         std::cout << "\n[Main] Ready for commands.\n";
