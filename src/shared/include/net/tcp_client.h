@@ -12,11 +12,12 @@ class TCPClient {
     TCPClient(const std::string& host, int port = 5000);
     ~TCPClient();
 
+    bool connect();
     bool send(const std::vector<uint8_t>& data);
     std::vector<uint8_t> recv();
 
    private:
     std::string host;
     int port;
-    int socket_fd = -1;
+    int client_fd = -1;
 };

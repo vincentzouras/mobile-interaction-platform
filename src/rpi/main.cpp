@@ -24,9 +24,9 @@ int main(int argc, char* argv[]) {
 
     try {
         // Initialize TCP server and UDP unicast
-        TCPServer tcp_server(5000);  // throws
-        std::string host = argc > 1 ? argv[1] : "127.0.0.1";
-        UDPTransmitter udp_transmitter(host, 5001);  // throws
+        TCPServer tcp_server;  // throws
+        std::string host = argc > 1 ? argv[1] : "192.168.4.241";
+        UDPTransmitter udp_transmitter(host);  // throws
 
         // Dummy frame buffer (will be replaced with actual camera frames)
         std::vector<uint8_t> dummy_data(1024, 0xFF);
@@ -36,7 +36,7 @@ int main(int argc, char* argv[]) {
             std::cout << "[TCP Thread] Started.\n";
             // Constantly listen for commands from laptop
             while (tcp_server.running) {
-                std::vector<uint8_t> command = tcp_server.recv();  // blocks
+                std::vector<uint8_t> command = tcp_server.recv();  // blocks at most 100ms
                 if (!command.empty()) {
                     std::cout << "[TCP Thread] Received: "
                               << std::string(command.begin(), command.end()) << "\n";
@@ -65,7 +65,7 @@ int main(int argc, char* argv[]) {
 
         // Graceful shutdown
 
-        std::cout << "[Main] Breaking out of control loop. Signaling threads...\n";
+        std::cout << "[Main] Shutting down, signaling threads...\n";
 
         // Tell threads to stop looping
         tcp_server.running = false;

@@ -58,7 +58,7 @@ std::vector<uint8_t> UDPReceiver::recv() {
     }
 
     std::vector<uint8_t> buffer(65536);  // Max datagram size 64KB
-    int n = recvfrom(socket_fd, buffer.data(), buffer.size(), 0, nullptr, nullptr);
+    int n = recvfrom(socket_fd, buffer.data(), buffer.size(), 0, nullptr, nullptr);  // blocks
     if (n < 0) {
         // Don't treat timeout as an error
         if (errno == EAGAIN || errno == EWOULDBLOCK) {
