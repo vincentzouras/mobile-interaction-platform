@@ -11,8 +11,6 @@ Camera::Camera(int device_id) {
 
         cap.set(cv::CAP_PROP_FRAME_WIDTH, 1280);
         cap.set(cv::CAP_PROP_FRAME_HEIGHT, 800);
-        std::cout << "[Camera] Camera size frame size " << cap.get(cv::CAP_PROP_FRAME_WIDTH) << "x"
-                  << cap.get(cv::CAP_PROP_FRAME_HEIGHT) << "\n";
 
         std::cout << "[Camera] Initialized Arducam on device " << device_id << "\n";
     } else {

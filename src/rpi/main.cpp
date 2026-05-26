@@ -8,6 +8,7 @@
 #include "net/tcp_server.h"
 #include "net/udp_transmitter.h"
 #include "perception/camera.h"
+#include "perception/image_sender.h"
 
 std::atomic<bool> g_quit{false};
 
@@ -27,10 +28,7 @@ int main(int argc, char* argv[]) {
         // Initialize TCP server and UDP unicast
         TCPServer tcp_server;  // throws
         std::string host = argc > 1 ? argv[1] : "192.168.4.241";
-        UDPTransmitter udp_transmitter(host);  // throws
-
-        // Dummy frame buffer (will be replaced with actual camera frames)
-        std::vector<uint8_t> dummy_data(1024, 0xFF);
+        UDPTransmitter udp_tx(host);  // throws
 
         // Spawn communication threads
         std::jthread tcp_thread([&tcp_server]() {
@@ -47,22 +45,24 @@ int main(int argc, char* argv[]) {
             }
             std::cout << "[TCP Thread] Stopped.\n";
         });
-        std::jthread udp_thread([&udp_transmitter, &dummy_data]() {
+        std::jthread udp_thread([&udp_tx]() {
             std::cout << "[UDP Thread] Started.\n";
 
             Camera camera;
             cv::Mat frame;
 
+            ImageSender img_sender(udp_tx);
+
             // Constantly send most recent camera frame to laptop
-            while (udp_transmitter.running) {
+            while (udp_tx.running) {
                 if (camera.grab_frame(frame)) {
                     std::cout << "[UDP Thread] Success frame capture.\n";
+                    img_sender.send_image(frame);
                 } else {
                     std::cerr << "[UDP Thread] Warning: Failed to grab frame from camera.\n";
                 }
 
-                udp_transmitter.send(dummy_data);
-                std::this_thread::sleep_for(std::chrono::seconds(5));
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));  // 10 FPS
             }
             std::cout << "[UDP Thread] Stopped.\n";
         });
@@ -79,7 +79,7 @@ int main(int argc, char* argv[]) {
 
         // Tell threads to stop looping
         tcp_server.running = false;
-        udp_transmitter.running = false;
+        udp_tx.running = false;
 
         // Wait for threads to finish (guaranteed to exit within 100ms due to socket timeouts)
         // if (tcp_thread.joinable()) {

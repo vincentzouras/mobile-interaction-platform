@@ -26,6 +26,7 @@ target_link_libraries(shared_net PRIVATE
 add_executable(rpi 
     src/rpi/main.cpp
     src/rpi/perception/camera.cpp
+    src/rpi/perception/image_sender.cpp
 )
 target_link_libraries(rpi PRIVATE 
     shared_net 
@@ -40,6 +41,7 @@ target_include_directories(rpi PRIVATE
 # Laptop executable
 add_executable(laptop
     src/laptop/main.cpp
+    src/laptop/image_receiver.cpp
 )
 target_link_libraries(laptop PRIVATE 
     shared_net 

@@ -4,6 +4,7 @@
 #include <string>
 #include <thread>
 
+#include "image_receiver.h"
 #include "net/tcp_client.h"
 #include "net/udp_receiver.h"
 #include "net/udp_transmitter.h"
@@ -25,15 +26,21 @@ int main(int argc, char* argv[]) {
 
     try {
         // Create UDP receiver to get video frames from RPi
-        UDPReceiver receiver;
+        UDPReceiver udp_rx;
+        ImageReceiver img_rx(udp_rx);
 
         // Spawn UDP receiver thread
-        std::jthread udp_thread([&receiver]() {
+        std::jthread udp_thread([&udp_rx, &img_rx]() {
             std::cout << "[UDP Thread] Started listening for video frames...\n";
-            while (receiver.running) {
-                auto data = receiver.recv();  // blocks at most 100ms
-                if (!data.empty()) {
-                    std::cout << "[UDP] Received video frame of " << data.size() << " bytes\n";
+            while (udp_rx.running) {
+                cv::Mat frame;
+                if (img_rx.receive_image(frame)) {
+                    cv::imshow("RPi Camera Stream", frame);
+
+                    // Press ESC to exit
+                    if (cv::waitKey(1) == 27) {
+                        break;
+                    }
                 }
             }
             std::cout << "[UDP Thread] Exited cleanly.\n";
@@ -85,7 +92,7 @@ int main(int argc, char* argv[]) {
         // Graceful shutdown
 
         // Signal the UDP thread to stop looping
-        receiver.running = false;
+        udp_rx.running = false;
 
         // Wait for UDP thread to finish
         // if (udp_thread.joinable()) {
