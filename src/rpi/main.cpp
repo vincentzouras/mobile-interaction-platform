@@ -55,16 +55,18 @@ int main(int argc, char* argv[]) {
 
             // Constantly send most recent camera frame to laptop
             while (udp_tx.running) {
+                auto start = std::chrono::steady_clock::now();
                 if (camera.grab_frame(frame)) {
-                    // std::cout << "[UDP Thread] Success frame capture.\n";
-                    udp_tx.send(std::vector<uint8_t>({'H', 'I', '\n'}));
-
+                    auto end = std::chrono::steady_clock::now();
+                    auto elapsed =
+                        std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+                    std::cout << "[UDP Thread] grab_frame took: " << elapsed << " ms\n";
                     img_sender.send_image(frame);
                 } else {
                     std::cerr << "[UDP Thread] Warning: Failed to grab frame from camera.\n";
                 }
 
-                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                // std::this_thread::sleep_for(std::chrono::milliseconds(10));
             }
             std::cout << "[UDP Thread] Stopped.\n";
         });
