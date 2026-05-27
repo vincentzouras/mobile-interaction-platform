@@ -57,7 +57,9 @@ int main(int argc, char* argv[]) {
             while (udp_tx.running) {
                 if (camera.grab_frame(frame)) {
                     // std::cout << "[UDP Thread] Success frame capture.\n";
-                    udp_tx.send(std::vector<uint8_t>({'H', 'I', '\n'}));  // Test heartbeat message
+                    if (udp_tx.send(std::vector<uint8_t>({'H', 'I', '\n'}))) {
+                        std::cout << "[UDP Thread] Sent heartbeat.\n";
+                    }
                     img_sender.send_image(frame);
                 } else {
                     std::cerr << "[UDP Thread] Warning: Failed to grab frame from camera.\n";
@@ -70,9 +72,16 @@ int main(int argc, char* argv[]) {
 
         // Main control loop
         std::cout << "[Main] Entering main control loop...\n";
+        int dot_state = 0;  // dots heartbeat
         while (!g_quit) {
-            std::cout << "[Main] Control loop tick...\n";
+            // dots heartbeat
+            dot_state = (dot_state % 3) + 1;  // 1..3
+            std::cout << "[Main] Control loop tick";
+            for (int i = 0; i < dot_state; ++i) std::cout << ".";
+            std::cout << "\n";
+
             // TODO: Perception, Planning, Motion Control
+
             std::this_thread::sleep_for(std::chrono::seconds(2));
         }
 
