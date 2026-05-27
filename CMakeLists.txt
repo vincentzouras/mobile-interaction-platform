@@ -4,6 +4,13 @@ project(MobileInteractionPlatform)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+include(FetchContent)
+FetchContent_Declare(
+    spdlog
+    URL https://github.com/gabime/spdlog/archive/refs/tags/v1.14.1.zip
+)
+FetchContent_MakeAvailable(spdlog)
+
 # Find OpenCV
 find_package(OpenCV REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIRS})
@@ -20,6 +27,9 @@ target_include_directories(shared_net PUBLIC
 )
 target_link_libraries(shared_net PRIVATE 
     pthread
+)
+target_link_libraries(shared_net PUBLIC
+    spdlog::spdlog
 )
 
 # RPi executable

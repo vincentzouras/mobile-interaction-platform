@@ -3,7 +3,8 @@
 #include <netinet/in.h>
 
 #include <cstring>
-#include <iostream>
+
+#include "spdlog/spdlog.h"
 
 ImageReceiver::ImageReceiver(UDPReceiver& receiver) : udp_rx(receiver) {}
 
@@ -33,7 +34,7 @@ bool ImageReceiver::receive_image(cv::Mat& out_frame) {
             // If we see a frame ID that is much older than our last completed frame, it likely
             // means the stream has restarted
             if (last_completed_frame_id - host_header.frame_id > 100) {
-                std::cout << "[UDP] Stream reset detected. Resetting buffers.\n";
+                spdlog::info("[UDP] Stream reset detected. Resetting buffers.");
                 last_completed_frame_id = 0;
                 frame_buffers.clear();
             } else {

@@ -4,12 +4,12 @@
 #include <unistd.h>
 
 #include <cstring>
-#include <iostream>
 
 #include "net/config.h"
+#include "spdlog/spdlog.h"
 
 TCPClient::TCPClient(const std::string& host, int port) : host(host), port(port), client_fd(-1) {
-    std::cout << "[TCP] Client initialized for target " << host << ":" << port << "\n";
+    spdlog::info("[TCP] Client initialized for target {}:{}", host, port);
     buffer.resize(net::OS_PAGE_SIZE);
 }
 
@@ -17,7 +17,7 @@ TCPClient::~TCPClient() {
     if (client_fd >= 0) {
         close(client_fd);
         client_fd = -1;
-        std::cout << "[TCP] Disconnected\n";
+        spdlog::info("[TCP] Disconnected");
     }
 }
 
@@ -31,7 +31,7 @@ bool TCPClient::connect() {
     // Create socket
     client_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (client_fd < 0) {
-        std::cerr << "[TCP] Failed to create socket\n";
+        spdlog::error("[TCP] Failed to create socket");
         return false;
     }
 
@@ -40,7 +40,7 @@ bool TCPClient::connect() {
     tv.tv_sec = 0;
     tv.tv_usec = 100000;  // 100ms
     if (setsockopt(client_fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0) {
-        std::cerr << "[TCP] Warning: Failed to set SO_RCVTIMEO\n";
+        spdlog::warn("[TCP] Failed to set SO_RCVTIMEO");
     }
 
     // Build address
@@ -49,7 +49,7 @@ bool TCPClient::connect() {
     addr.sin_port = htons(port);
 
     if (inet_pton(AF_INET, host.c_str(), &addr.sin_addr) <= 0) {
-        std::cerr << "[TCP] Invalid address: " << host << "\n";
+        spdlog::error("[TCP] Invalid address: {}", host);
         close(client_fd);
         client_fd = -1;
         return false;
@@ -58,32 +58,32 @@ bool TCPClient::connect() {
     if (::connect(client_fd, (sockaddr*)&addr, sizeof(addr)) < 0) {
         close(client_fd);
         client_fd = -1;
-        std::cerr << "[TCP] Connection failed\n";
+        spdlog::error("[TCP] Connection failed");
         return false;
     }
 
-    std::cout << "[TCP] Successfully connected to " << host << ":" << port << "\n";
+    spdlog::info("[TCP] Successfully connected to {}:{}", host, port);
     return true;
 }
 
 bool TCPClient::send(const std::vector<uint8_t>& data) {
     if (client_fd < 0) {
-        std::cerr << "[TCP] Not connected\n";
+        spdlog::warn("[TCP] Not connected");
         return false;
     }
 
     if (::send(client_fd, data.data(), data.size(), MSG_NOSIGNAL) < 0) {
-        std::cerr << "[TCP] Send failed\n";
+        spdlog::error("[TCP] Send failed");
         return false;
     }
 
-    std::cout << "[TCP] Sent: " << data.size() << " bytes\n";
+    spdlog::info("[TCP] Sent: {} bytes", data.size());
     return true;
 }
 
 std::vector<uint8_t> TCPClient::recv() {
     if (client_fd < 0) {
-        std::cerr << "[TCP] Not connected\n";
+        spdlog::warn("[TCP] Not connected");
         return {};
     }
 
@@ -95,13 +95,13 @@ std::vector<uint8_t> TCPClient::recv() {
         }
 
         // Actual error
-        std::cerr << "[TCP] Disconnected from server (Error: " << strerror(errno) << ")\n";
+        spdlog::error("[TCP] Disconnected from server (Error: {})", strerror(errno));
         close(client_fd);
         client_fd = -1;
         return {};
     } else if (n == 0) {
         // Clean disconnect
-        std::cerr << "[TCP] Disconnected from server (clean)\n";
+        spdlog::info("[TCP] Disconnected from server (clean)");
         close(client_fd);
         client_fd = -1;
         return {};

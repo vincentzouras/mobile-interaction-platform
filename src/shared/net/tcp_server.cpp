@@ -6,9 +6,9 @@
 #include <unistd.h>
 
 #include <cstring>
-#include <iostream>
 
 #include "net/config.h"
+#include "spdlog/spdlog.h"
 
 TCPServer::TCPServer(int port) : server_fd(-1), client_fd(-1) {
     // Create server socket
@@ -22,14 +22,14 @@ TCPServer::TCPServer(int port) : server_fd(-1), client_fd(-1) {
     // Allow reusing the address
     int opt = 1;
     if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
-        std::cerr << "[TCP] Warning: Failed to set socket option SO_REUSEADDR\n";
+        spdlog::warn("[TCP] Failed to set socket option SO_REUSEADDR");
     }
     // Set timeout to avoid blocking indefinitely on accept()
     struct timeval tv;
     tv.tv_sec = 0;
     tv.tv_usec = 100000;  // 100ms
     if (setsockopt(server_fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0) {
-        std::cerr << "[TCP] Warning: Failed to set SO_RCVTIMEO on server socket\n";
+        spdlog::warn("[TCP] Failed to set SO_RCVTIMEO on server socket");
     }
 
     // Bind and listen
@@ -47,7 +47,7 @@ TCPServer::TCPServer(int port) : server_fd(-1), client_fd(-1) {
     }
 
     running = true;
-    std::cout << "[TCP] Listening on port " << port << "\n";
+    spdlog::info("[TCP] Listening on port {}", port);
 
     buffer.resize(net::OS_PAGE_SIZE);
 }
@@ -64,7 +64,7 @@ TCPServer::~TCPServer() {
     }
 
     running = false;
-    std::cout << "[TCP] Stopped\n";
+    spdlog::info("[TCP] Stopped");
 }
 
 std::vector<uint8_t> TCPServer::recv() {
@@ -78,18 +78,18 @@ std::vector<uint8_t> TCPServer::recv() {
         if (client_fd < 0) {
             // Ignore timeout errors, report real errors
             if (errno != EAGAIN && errno != EWOULDBLOCK) {
-                std::cerr << "[TCP] Accept failed: " << strerror(errno) << "\n";
+                spdlog::error("[TCP] Accept failed: {}", strerror(errno));
             }
             return {};
         }
-        std::cout << "[TCP] Client connected\n";
+        spdlog::info("[TCP] Client connected");
 
         // Set receive timeout on client socket to avoid blocking indefinitely on recv()
         struct timeval tv;
         tv.tv_sec = 0;
         tv.tv_usec = 100000;  // 100ms
         if (setsockopt(client_fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0) {
-            std::cerr << "[TCP] Warning: Failed to set SO_RCVTIMEO on client socket\n";
+            spdlog::warn("[TCP] Failed to set SO_RCVTIMEO on client socket");
         }
     }
 
@@ -103,13 +103,13 @@ std::vector<uint8_t> TCPServer::recv() {
         // Actual error
         close(client_fd);
         client_fd = -1;
-        std::cerr << "[TCP] Client disconnected (Error: " << strerror(errno) << ")\n";
+        spdlog::error("[TCP] Client disconnected (Error: {})", strerror(errno));
         return {};
     } else if (n == 0) {
         // Clean disconnect
         close(client_fd);
         client_fd = -1;
-        std::cout << "[TCP] Client disconnected (clean)\n";
+        spdlog::info("[TCP] Client disconnected (clean)");
         return {};
     }
 
@@ -118,15 +118,15 @@ std::vector<uint8_t> TCPServer::recv() {
 
 bool TCPServer::send(const std::vector<uint8_t>& data) {
     if (client_fd < 0) {
-        std::cerr << "[TCP] No client connected\n";
+        spdlog::warn("[TCP] No client connected");
         return false;
     }
 
     if (::send(client_fd, data.data(), data.size(), MSG_NOSIGNAL) < 0) {
-        std::cerr << "[TCP] Send failed\n";
+        spdlog::error("[TCP] Send failed");
         return false;
     }
 
-    std::cout << "[TCP] Sent: " << data.size() << " bytes\n";
+    spdlog::info("[TCP] Sent: {} bytes", data.size());
     return true;
 }

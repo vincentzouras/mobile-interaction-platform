@@ -6,7 +6,8 @@
 #include <unistd.h>
 
 #include <cstring>
-#include <iostream>
+
+#include "spdlog/spdlog.h"
 
 UDPTransmitter::UDPTransmitter(const std::string& host, int port) : socket_fd(-1) {
     socket_fd = socket(AF_INET, SOCK_DGRAM, 0);
@@ -22,7 +23,7 @@ UDPTransmitter::UDPTransmitter(const std::string& host, int port) : socket_fd(-1
 
     running = true;
 
-    std::cout << "[UDP] Initialized transmitter to " << host << ":" << port << "\n";
+    spdlog::info("[UDP] Initialized transmitter to {}:{}", host, port);
 }
 
 UDPTransmitter::~UDPTransmitter() {
@@ -32,7 +33,7 @@ UDPTransmitter::~UDPTransmitter() {
     }
 
     running = false;
-    std::cout << "[UDP] Stopped\n";
+    spdlog::info("[UDP] Stopped");
 }
 
 bool UDPTransmitter::send(const std::vector<uint8_t>& data) {
@@ -41,7 +42,7 @@ bool UDPTransmitter::send(const std::vector<uint8_t>& data) {
     }
 
     if (sendto(socket_fd, data.data(), data.size(), 0, (sockaddr*)&addr, sizeof(addr)) < 0) {
-        std::cerr << "[UDP] Send failed\n";
+        spdlog::error("[UDP] Send failed");
         return false;
     }
 

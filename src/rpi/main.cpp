@@ -1,7 +1,6 @@
 #include <unistd.h>
 
 #include <csignal>
-#include <iostream>
 #include <thread>
 #include <vector>
 
@@ -9,20 +8,33 @@
 #include "net/udp_transmitter.h"
 #include "perception/camera.h"
 #include "perception/image_sender.h"
+#include "spdlog/sinks/stdout_color_sinks.h"
+#include "spdlog/spdlog.h"
 
 std::atomic<bool> g_quit{false};
+std::atomic<int> g_last_signal{0};
+
+void init_logging() {
+    auto logger = spdlog::stdout_color_mt("mip");
+    spdlog::set_default_logger(logger);
+    spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%^%l%$] %v");
+    spdlog::set_level(spdlog::level::info);
+    spdlog::flush_on(spdlog::level::info);
+}
 
 void signal_handler(int signum) {
-    std::cout << "\n[Main] Interrupt signal (" << signum << ") received. Initiating shutdown...\n";
     g_quit = true;
+    g_last_signal.store(signum, std::memory_order_relaxed);
 }
 
 int main(int argc, char* argv[]) {
+    init_logging();
+
     // Register signal handler for graceful shutdown
     std::signal(SIGINT, signal_handler);
     std::signal(SIGTERM, signal_handler);
 
-    std::cout << "[Main] Starting RPi controller...\n";
+    spdlog::info("[Main] Starting RPi controller...");
 
     try {
         // Initialize TCP server and UDP unicast
@@ -32,21 +44,20 @@ int main(int argc, char* argv[]) {
 
         // Spawn communication threads
         std::jthread tcp_thread([&tcp_server]() {
-            std::cout << "[TCP Thread] Started.\n";
+            spdlog::info("[TCP Thread] Started.");
             // Constantly listen for commands from laptop
             while (tcp_server.running) {
                 std::vector<uint8_t> command = tcp_server.recv();  // blocks at most 100ms
                 if (!command.empty()) {
-                    std::cout << "\n[TCP Thread] Received: "
-                              << std::string(command.begin(), command.end());
+                    spdlog::info("[TCP Thread] Received: {}",
+                                 std::string(command.begin(), command.end()));
                     tcp_server.send(std::vector<uint8_t>({'O', 'K', '\n'}));
-                    std::cout << "\n";
                 }
             }
-            std::cout << "[TCP Thread] Stopped.\n";
+            spdlog::info("[TCP Thread] Stopped.");
         });
         std::jthread udp_thread([&udp_tx]() {
-            std::cout << "[UDP Thread] Started.\n";
+            spdlog::info("[UDP Thread] Started.");
 
             Camera camera;
             cv::Mat frame;
@@ -60,26 +71,25 @@ int main(int argc, char* argv[]) {
                     auto end = std::chrono::steady_clock::now();
                     auto elapsed =
                         std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-                    std::cout << "[UDP Thread] grab_frame took: " << elapsed << " ms\n";
+                    spdlog::info("[UDP Thread] grab_frame took: {} ms", elapsed);
                     img_sender.send_image(frame);
                 } else {
-                    std::cerr << "[UDP Thread] Warning: Failed to grab frame from camera.\n";
+                    spdlog::warn("[UDP Thread] Failed to grab frame from camera.");
                 }
 
                 // std::this_thread::sleep_for(std::chrono::milliseconds(10));
             }
-            std::cout << "[UDP Thread] Stopped.\n";
+            spdlog::info("[UDP Thread] Stopped.");
         });
 
         // Main control loop
-        std::cout << "[Main] Entering main control loop...\n";
+        spdlog::info("[Main] Entering main control loop...");
         int dot_state = 0;  // dots heartbeat
         while (!g_quit) {
             // dots heartbeat
             dot_state = (dot_state % 3) + 1;  // 1..3
-            std::cout << "[Main] Control loop tick";
-            for (int i = 0; i < dot_state; ++i) std::cout << ".";
-            std::cout << "\n";
+            std::string dots(dot_state, '.');
+            spdlog::info("[Main] Control loop tick{}", dots);
 
             // TODO: Perception, Planning, Motion Control
 
@@ -99,12 +109,16 @@ int main(int argc, char* argv[]) {
         // if (udp_thread.joinable()) {
         //     udp_thread.join();
         // }
-        std::cout << "[Main] Joining threads...\n";
+        if (g_last_signal.load(std::memory_order_relaxed) != 0) {
+            spdlog::info("[Main] Interrupt signal ({}) received. Initiating shutdown...",
+                         g_last_signal.load(std::memory_order_relaxed));
+        }
+        spdlog::info("[Main] Joining threads...");
     } catch (const std::exception& e) {
-        std::cerr << "[Main] Critical Error: " << e.what() << "\n";
+        spdlog::critical("[Main] Critical Error: {}", e.what());
         return 1;
     }
 
-    std::cout << "[Main] Shutdown completed cleanly, bye!\n";
+    spdlog::info("[Main] Shutdown completed cleanly, bye!");
     return 0;
 }

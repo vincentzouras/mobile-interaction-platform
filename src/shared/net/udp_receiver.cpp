@@ -3,9 +3,8 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 
-#include <iostream>
-
 #include "net/config.h"
+#include "spdlog/spdlog.h"
 
 UDPReceiver::UDPReceiver(int port) : port(port), socket_fd(-1) {
     // Create socket
@@ -19,14 +18,14 @@ UDPReceiver::UDPReceiver(int port) : port(port), socket_fd(-1) {
     // Allow reusing the address
     int opt = 1;
     if (setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
-        std::cerr << "[UDP] Failed to set socket options\n";
+        spdlog::warn("[UDP] Failed to set socket options");
     }
     // Set timeout to avoid blocking indefinitely on accept()
     struct timeval tv;
     tv.tv_sec = 0;
     tv.tv_usec = 100000;  // 100ms
     if (setsockopt(socket_fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0) {
-        std::cerr << "[UDP] Warning: Failed to set SO_RCVTIMEO on socket\n";
+        spdlog::warn("[UDP] Failed to set SO_RCVTIMEO on socket");
     }
 
     // Bind
@@ -41,7 +40,7 @@ UDPReceiver::UDPReceiver(int port) : port(port), socket_fd(-1) {
     }
 
     running = true;
-    std::cout << "[UDP] Bound to port " << port << "\n";
+    spdlog::info("[UDP] Bound to port {}", port);
 
     buffer.resize(net::MAX_UDP_PACKET_PAYLOAD);
 }
@@ -53,7 +52,7 @@ UDPReceiver::~UDPReceiver() {
     }
 
     running = false;
-    std::cout << "[UDP] Stopped\n";
+    spdlog::info("[UDP] Stopped");
 }
 
 std::vector<uint8_t> UDPReceiver::recv() {
@@ -68,7 +67,7 @@ std::vector<uint8_t> UDPReceiver::recv() {
             return {};
         }
 
-        std::cerr << "[UDP] Receive failed\n";
+        spdlog::error("[UDP] Receive failed");
         return {};
     }
 

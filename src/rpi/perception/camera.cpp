@@ -1,6 +1,6 @@
 #include "perception/camera.h"
 
-#include <iostream>
+#include "spdlog/spdlog.h"
 
 Camera::Camera(int device_id) {
     if (cap.open(device_id, cv::CAP_V4L2)) {
@@ -12,9 +12,9 @@ Camera::Camera(int device_id) {
         cap.set(cv::CAP_PROP_FRAME_WIDTH, 1280);
         cap.set(cv::CAP_PROP_FRAME_HEIGHT, 800);
 
-        std::cout << "[Camera] Initialized Arducam on device " << device_id << "\n";
+        spdlog::info("[Camera] Initialized Arducam on device {}", device_id);
     } else {
-        std::cerr << "[Camera] CRITICAL: Failed to open camera hardware!\n";
+        spdlog::critical("[Camera] Failed to open camera hardware!");
     }
 }
 
