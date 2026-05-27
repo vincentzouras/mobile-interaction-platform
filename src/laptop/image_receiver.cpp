@@ -30,7 +30,15 @@ bool ImageReceiver::receive_image(cv::Mat& out_frame) {
 
         // Skip packets from older frames
         if (host_header.frame_id <= last_completed_frame_id && last_completed_frame_id > 0) {
-            continue;
+            // If we see a frame ID that is much older than our last completed frame, it likely
+            // means the stream has restarted
+            if (last_completed_frame_id - host_header.frame_id > 100) {
+                std::cout << "[UDP] Stream reset detected. Resetting buffers.\n";
+                last_completed_frame_id = 0;
+                frame_buffers.clear();
+            } else {
+                continue;  // Otherwise drop late packet from an old frame
+            }
         }
 
         // Access or create the buffer for this specific frame

@@ -64,7 +64,7 @@ int main(int argc, char* argv[]) {
                     std::cerr << "[UDP Thread] Warning: Failed to grab frame from camera.\n";
                 }
 
-                std::this_thread::sleep_for(std::chrono::milliseconds(100));  // 10 FPS
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));  // 10 FPS
             }
             std::cout << "[UDP Thread] Stopped.\n";
         });
