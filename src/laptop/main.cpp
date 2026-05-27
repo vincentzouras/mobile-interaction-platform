@@ -25,12 +25,12 @@ void init_logging() {
 }
 
 void signal_handler(int signum) {
+    spdlog::info("[Main] Interrupt signal ({}) received. Initiating shutdown...", signum);
     g_quit = true;
-    g_last_signal.store(signum, std::memory_order_relaxed);
     close(STDIN_FILENO);  // Unblock std::getline when we send Ctrl+C to shutdown
 }
 
-int main(int argc, char* argv[]) {
+int main() {
     init_logging();
 
     // Register signal handler for graceful shutdown
@@ -39,90 +39,95 @@ int main(int argc, char* argv[]) {
 
     spdlog::info("[Main] Starting laptop client...");
 
-    try {
-        // Create UDP receiver to get video frames from RPi
-        UDPReceiver udp_rx;
-        ImageReceiver img_rx(udp_rx);
+    cv::Mat shared_frame;
+    std::mutex frame_mutex;
 
-        // Spawn UDP receiver thread
-        std::jthread udp_thread([&udp_rx, &img_rx]() {
+    // Spawn UDP receiver thread (only for networking)
+    std::jthread udp_thread([&shared_frame, &frame_mutex]() {
+        try {
+            UDPReceiver udp_rx;
+            ImageReceiver img_rx(udp_rx);
+
             spdlog::info("[UDP Thread] Started listening for video frames...");
+
             cv::Mat frame;
-            while (udp_rx.running) {
+
+            while (!g_quit) {
                 if (img_rx.receive_image(frame)) {
-                    cv::imshow("RPi Camera Stream", frame);
-                }
-                // Press ESC to exit
-                if (cv::waitKey(1) == 27) {
-                    g_quit = true;
-                    break;
+                    std::lock_guard<std::mutex> lock(frame_mutex);
+                    frame.copyTo(shared_frame);
                 }
             }
-            spdlog::info("[UDP Thread] Exited cleanly.");
-        });
+        } catch (const std::exception& e) {
+            spdlog::error("[UDP Thread] Exception: {}", e.what());
+        }
 
-        // Create TCP client to connect with RPi and send commands
-        std::string host = argc > 1 ? argv[1] : "192.168.4.21";
-        TCPClient client(host);
+        spdlog::info("[UDP Thread] Exited cleanly.");
+    });
 
-        while (!g_quit) {
-            // STATE 1
-            // Keep connecting until RPi is online
-            spdlog::info("[Main] Attempting to connect to RPi...");
+    // Create TCP client to connect with RPi and send commands
+    std::jthread cmd_thread([]() {
+        try {
+            TCPClient client;
+
+            spdlog::info("[Cmd Thread] Attempting to connect to RPi...");
             while (!g_quit) {
                 if (client.connect()) {
-                    break;  // Success!
+                    break;
                 }
-                spdlog::info("[Main] RPi not found. Retrying in 2 seconds...");
+                spdlog::info("[Cmd Thread] RPi not found. Retrying in 2 seconds...");
                 std::this_thread::sleep_for(std::chrono::seconds(2));
             }
 
-            // STATE 2
-            // Main loop, read user commands
-            spdlog::info("[Main] Ready for commands.");
+            spdlog::info("[Cmd Thread] Ready for commands.");
             std::string command;
             while (!g_quit) {
-                std::cout << "Command: ";
+                spdlog::info("[Cmd Thread] Enter command: ");
                 if (!std::getline(std::cin, command)) break;
+                if (command.empty()) continue;
 
-                // Convert string to bytes
                 std::vector<uint8_t> data(command.begin(), command.end());
                 data.push_back('\n');
 
                 if (client.send(data)) {
                     std::vector<uint8_t> response = client.recv();
                     if (!response.empty()) {
-                        spdlog::info("RPi Response: {}",
+                        spdlog::info("[Cmd Thread] RPi Response: {}",
                                      std::string(response.begin(), response.end()));
                     }
                 } else {
-                    // If send fails, the Pi disconnected. We should probably exit or try to
-                    // reconnect.
-                    spdlog::warn("[Main] Connection to Pi lost!");
+                    spdlog::warn("[Cmd Thread] Connection to Pi lost!");
                     break;
                 }
             }
+        } catch (const std::exception& e) {
+            spdlog::error("[Cmd Thread] Exception: {}", e.what());
+        }
+        spdlog::info("[Cmd Thread] Exited cleanly.");
+    });
+
+    // Main loop and GUI
+    cv::Mat display_frame;
+    while (!g_quit) {
+        {
+            // Safely extract the latest frame
+            std::lock_guard<std::mutex> lock(frame_mutex);
+            if (!shared_frame.empty()) {
+                shared_frame.copyTo(display_frame);
+            }
         }
 
-        // Graceful shutdown
-
-        // Signal the UDP thread to stop looping
-        udp_rx.running = false;
-
-        // Wait for UDP thread to finish
-        // if (udp_thread.joinable()) {
-        //     udp_thread.join();
-        // }
-        if (g_last_signal.load(std::memory_order_relaxed) != 0) {
-            spdlog::info("[Main] Interrupt signal ({}) received. Initiating shutdown...",
-                         g_last_signal.load(std::memory_order_relaxed));
+        if (!display_frame.empty()) {
+            cv::imshow("RPi Camera Stream", display_frame);
         }
-        spdlog::info("[Main] Joining UDP thread...");
-    } catch (const std::exception& e) {
-        spdlog::critical("[Main] Critical Error: {}", e.what());
-        return 1;
+
+        if (cv::waitKey(1) == 27) {  // ESC pressed
+            g_quit = true;
+            break;
+        }
     }
 
+    cv::destroyAllWindows();
     spdlog::info("[Main] Shutdown completed cleanly, bye!");
     return 0;
 }

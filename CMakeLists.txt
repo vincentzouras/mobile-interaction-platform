@@ -8,6 +8,7 @@ include(FetchContent)
 FetchContent_Declare(
     spdlog
     URL https://github.com/gabime/spdlog/archive/refs/tags/v1.14.1.zip
+    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
 )
 FetchContent_MakeAvailable(spdlog)
 

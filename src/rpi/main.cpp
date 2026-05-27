@@ -27,7 +27,7 @@ void signal_handler(int signum) {
     g_last_signal.store(signum, std::memory_order_relaxed);
 }
 
-int main(int argc, char* argv[]) {
+int main() {
     init_logging();
 
     // Register signal handler for graceful shutdown
@@ -38,9 +38,8 @@ int main(int argc, char* argv[]) {
 
     try {
         // Initialize TCP server and UDP unicast
-        TCPServer tcp_server;  // throws
-        std::string host = argc > 1 ? argv[1] : "192.168.4.241";
-        UDPTransmitter udp_tx(host);  // throws
+        TCPServer tcp_server;   // throws
+        UDPTransmitter udp_tx;  // throws
 
         // Spawn communication threads
         std::jthread tcp_thread([&tcp_server]() {

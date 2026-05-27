@@ -16,7 +16,7 @@ namespace net {
 inline constexpr int DEFAULT_TCP_PORT = 5000;
 inline constexpr int DEFAULT_UDP_PORT = 5001;
 
-inline constexpr std::string_view DEFAULT_RPI_IP = "192.168.4.21";
+inline constexpr std::string_view DEFAULT_RPI_IP = "192.168.4.22";
 inline constexpr std::string_view DEFAULT_LAPTOP_IP = "192.168.4.241";
 
 inline constexpr size_t OS_PAGE_SIZE = 4096;
