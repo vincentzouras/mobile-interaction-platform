@@ -47,7 +47,7 @@ void ImageSender::send_image(const cv::Mat& frame) {
         udp_tx.send(packet_buffer);
 
         // Add a tiny microsecond delay to prevent UDP socket flooding
-        std::this_thread::sleep_for(std::chrono::microseconds(100));
+        // std::this_thread::sleep_for(std::chrono::microseconds(100));
     }
 
     current_frame_id++;
