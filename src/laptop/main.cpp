@@ -35,10 +35,7 @@ int main(int argc, char* argv[]) {
             cv::Mat frame;
             while (udp_rx.running) {
                 if (img_rx.receive_image(frame)) {
-                    std::cout << "[UDP Thread] Received complete frame, displaying...\n";
                     cv::imshow("RPi Camera Stream", frame);
-                } else {
-                    std::cout << "[UDP Thread] No complete frame received yet...\n";
                 }
                 // Press ESC to exit
                 if (cv::waitKey(1) == 27) {

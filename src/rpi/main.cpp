@@ -57,6 +57,7 @@ int main(int argc, char* argv[]) {
             while (udp_tx.running) {
                 if (camera.grab_frame(frame)) {
                     std::cout << "[UDP Thread] Success frame capture.\n";
+                    udp_tx.send(std::vector<uint8_t>({'H', 'I', '\n'}));  // Test heartbeat message
                     img_sender.send_image(frame);
                 } else {
                     std::cerr << "[UDP Thread] Warning: Failed to grab frame from camera.\n";
