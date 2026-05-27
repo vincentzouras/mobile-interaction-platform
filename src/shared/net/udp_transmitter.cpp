@@ -21,6 +21,8 @@ UDPTransmitter::UDPTransmitter(const std::string& host, int port) : socket_fd(-1
     inet_pton(AF_INET, host.c_str(), &addr.sin_addr);
 
     running = true;
+
+    std::cout << "[UDP] Initialized transmitter to " << host << ":" << port << "\n";
 }
 
 UDPTransmitter::~UDPTransmitter() {
