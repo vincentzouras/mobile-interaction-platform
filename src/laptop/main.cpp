@@ -32,15 +32,18 @@ int main(int argc, char* argv[]) {
         // Spawn UDP receiver thread
         std::jthread udp_thread([&udp_rx, &img_rx]() {
             std::cout << "[UDP Thread] Started listening for video frames...\n";
+            cv::Mat frame;
             while (udp_rx.running) {
-                cv::Mat frame;
                 if (img_rx.receive_image(frame)) {
+                    std::cout << "[UDP Thread] Received complete frame, displaying...\n";
                     cv::imshow("RPi Camera Stream", frame);
-
-                    // Press ESC to exit
-                    if (cv::waitKey(1) == 27) {
-                        break;
-                    }
+                } else {
+                    std::cout << "[UDP Thread] No complete frame received yet...\n";
+                }
+                // Press ESC to exit
+                if (cv::waitKey(1) == 27) {
+                    g_quit = true;
+                    break;
                 }
             }
             std::cout << "[UDP Thread] Exited cleanly.\n";

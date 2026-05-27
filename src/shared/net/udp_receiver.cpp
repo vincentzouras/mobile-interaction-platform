@@ -72,6 +72,8 @@ std::vector<uint8_t> UDPReceiver::recv() {
         return {};
     }
 
+    std::cout << "[UDP] Received " << n << " bytes\n";
+
     // Return copy of only valid portion of buffer
     return std::vector<uint8_t>(buffer.begin(), buffer.begin() + n);
 }

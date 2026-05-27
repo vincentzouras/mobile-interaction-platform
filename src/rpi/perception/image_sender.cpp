@@ -1,5 +1,7 @@
 #include "perception/image_sender.h"
 
+#include <thread>
+
 ImageSender::ImageSender(UDPTransmitter& transmitter) : udp_tx(transmitter) {}
 
 void ImageSender::send_image(const cv::Mat& frame) {
@@ -43,6 +45,9 @@ void ImageSender::send_image(const cv::Mat& frame) {
 
         // Send using your existing UDPTransmitter
         udp_tx.send(packet_buffer);
+
+        // Add a tiny microsecond delay to prevent UDP socket flooding
+        std::this_thread::sleep_for(std::chrono::microseconds(100));
     }
 
     current_frame_id++;
