@@ -7,9 +7,8 @@
 	},
 	"runArgs": [
 		"-p",
-		"5001:5001/udp"
-	],
-	"postCreateCommand": "sudo apt-get update && sudo apt-get install -y libopencv-dev"
+		"0.0.0.0:5001:5001/udp"
+	]
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.

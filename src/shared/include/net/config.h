@@ -21,6 +21,6 @@ inline constexpr std::string_view DEFAULT_LAPTOP_IP = "192.168.4.241";
 
 inline constexpr size_t OS_PAGE_SIZE = 4096;
 
-inline constexpr size_t MAX_UDP_PACKET_PAYLOAD = 1000;  // Conservative size to avoid fragmentation
+inline constexpr size_t MAX_UDP_PACKET_PAYLOAD = 1400;  // Conservative size to avoid fragmentation
 inline constexpr int MAX_FRAGMENT_DATA_SIZE = MAX_UDP_PACKET_PAYLOAD - sizeof(ImageFragmentHeader);
 }  // namespace net
