@@ -70,8 +70,15 @@ int main() {
                     auto end = std::chrono::steady_clock::now();
                     auto elapsed =
                         std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-                    spdlog::info("[UDP Thread] grab_frame took: {} ms", elapsed);
-                    img_sender.send_image(frame);
+                    spdlog::debug("[UDP Thread] grab_frame took: {} ms", elapsed);
+                    start = std::chrono::steady_clock::now();
+
+                    img_sender.send_image(frame);  // SEND IMAGE
+
+                    end = std::chrono::steady_clock::now();
+                    elapsed =
+                        std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+                    spdlog::debug("[UDP Thread] send_image took: {} ms", elapsed);
                 } else {
                     spdlog::warn("[UDP Thread] Failed to grab frame from camera.");
                 }

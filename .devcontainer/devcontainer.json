@@ -7,7 +7,9 @@
 	},
 	"runArgs": [
 		"-p",
-		"0.0.0.0:5001:5001/udp"
+		"0.0.0.0:5001:5001/udp",
+		"-p",
+		"0.0.0.0:5000:5000/tcp"
 	]
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},

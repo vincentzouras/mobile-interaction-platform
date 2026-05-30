@@ -82,7 +82,7 @@ int main() {
             spdlog::info("[Cmd Thread] Ready for commands.");
             std::string command;
             while (!g_quit) {
-                spdlog::info("[Cmd Thread] Enter command: ");
+                spdlog::info("\n[Cmd Thread] Enter command: ");
                 if (!std::getline(std::cin, command)) break;
                 if (command.empty()) continue;
 
@@ -92,7 +92,7 @@ int main() {
                 if (client.send(data)) {
                     std::vector<uint8_t> response = client.recv();
                     if (!response.empty()) {
-                        spdlog::info("[Cmd Thread] RPi Response: {}",
+                        spdlog::info("[Cmd Thread] RPi Response: {}\n",
                                      std::string(response.begin(), response.end()));
                     }
                 } else {
@@ -121,7 +121,7 @@ int main() {
             cv::imshow("RPi Camera Stream", display_frame);
         }
 
-        if (cv::waitKey(1) == 27) {  // ESC pressed
+        if (cv::waitKey(33) == 27) {  // ESC pressed
             g_quit = true;
             break;
         }
