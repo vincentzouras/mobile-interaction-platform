@@ -10,7 +10,14 @@
 		"0.0.0.0:5001:5001/udp",
 		"-p",
 		"0.0.0.0:5000:5000/tcp"
-	]
+	],
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"DavidAnson.vscode-markdownlint"
+			]
+		}
+	}
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.

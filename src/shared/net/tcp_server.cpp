@@ -17,30 +17,19 @@ TCPServer::TCPServer(int port) : server_fd(-1), client_fd(-1) {
         throw std::runtime_error("[TCP] Failed to create socket");
     }
 
-    // Set socket options
-
-    // Allow reusing the address
-    int opt = 1;
-    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
-        spdlog::warn("[TCP] Failed to set socket option SO_REUSEADDR");
-    }
-    // Set timeout to avoid blocking indefinitely on accept()
-    struct timeval tv;
-    tv.tv_sec = 0;
-    tv.tv_usec = 100000;  // 100ms
-    if (setsockopt(server_fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0) {
-        spdlog::warn("[TCP] Failed to set SO_RCVTIMEO on server socket");
-    }
+    set_server_opts(server_fd);
 
     // Bind and listen
     sockaddr_in addr{};
     addr.sin_family = AF_INET;
     addr.sin_port = htons(port);
     addr.sin_addr.s_addr = INADDR_ANY;
+
     if (bind(server_fd, (sockaddr*)&addr, sizeof(addr)) < 0) {
         close(server_fd);
         throw std::runtime_error("[TCP] Bind failed");
     }
+
     if (listen(server_fd, 1) < 0) {
         close(server_fd);
         throw std::runtime_error("[TCP] Listen failed");
@@ -85,15 +74,13 @@ std::vector<uint8_t> TCPServer::recv() {
         spdlog::info("[TCP] Client connected");
 
         // Set receive timeout on client socket to avoid blocking indefinitely on recv()
-        struct timeval tv;
-        tv.tv_sec = 0;
-        tv.tv_usec = 100000;  // 100ms
+        struct timeval tv{0, 100000};  // 100ms
         if (setsockopt(client_fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0) {
             spdlog::warn("[TCP] Failed to set SO_RCVTIMEO on client socket");
         }
     }
 
-    int n = ::recv(client_fd, buffer.data(), buffer.size() - 1, 0);
+    int n = ::recv(client_fd, buffer.data(), buffer.size(), 0);
     if (n < 0) {
         // Don't close on timeout errors
         if (errno == EAGAIN || errno == EWOULDBLOCK) {
@@ -129,4 +116,17 @@ bool TCPServer::send(const std::vector<uint8_t>& data) {
 
     spdlog::info("[TCP] Sent: {} bytes", data.size());
     return true;
+}
+
+void TCPServer::set_server_opts(int fd) {
+    // Allow reusing the address
+    int opt = 1;  // enable
+    if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
+        spdlog::warn("[TCP] Failed to set socket option SO_REUSEADDR");
+    }
+    // Set timeout to avoid blocking indefinitely on accept()
+    struct timeval tv{0, 100000};  // 100ms
+    if (setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0) {
+        spdlog::warn("[TCP] Failed to set SO_RCVTIMEO on server socket");
+    }
 }

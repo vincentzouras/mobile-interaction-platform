@@ -36,9 +36,7 @@ bool TCPClient::connect() {
     }
 
     // Set timeout so recv() doesn't block indefinitely
-    struct timeval tv;
-    tv.tv_sec = 0;
-    tv.tv_usec = 100000;  // 100ms
+    struct timeval tv{0, 100000};  // 100ms
     if (setsockopt(client_fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0) {
         spdlog::warn("[TCP] Failed to set SO_RCVTIMEO");
     }
@@ -87,7 +85,7 @@ std::vector<uint8_t> TCPClient::recv() {
         return {};
     }
 
-    int n = ::recv(client_fd, buffer.data(), buffer.size() - 1, 0);
+    int n = ::recv(client_fd, buffer.data(), buffer.size(), 0);
     if (n < 0) {
         // Ignore timeout errors
         if (errno == EAGAIN || errno == EWOULDBLOCK) {

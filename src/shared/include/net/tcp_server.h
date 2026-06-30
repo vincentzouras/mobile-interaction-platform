@@ -22,4 +22,6 @@ class TCPServer {
     std::vector<uint8_t> buffer;
     int server_fd;
     int client_fd;
+
+    void set_server_opts(int fd);
 };
