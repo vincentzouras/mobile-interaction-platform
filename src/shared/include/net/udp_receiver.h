@@ -21,4 +21,6 @@ class UDPReceiver {
     std::vector<uint8_t> buffer;  // buffer for receiving data so we don't allocate on every recv()
     int port;
     int socket_fd = -1;
+
+    void set_receiver_opts(int fd);
 };

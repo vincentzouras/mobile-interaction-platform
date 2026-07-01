@@ -13,20 +13,7 @@ UDPReceiver::UDPReceiver(int port) : port(port), socket_fd(-1) {
         throw std::runtime_error("[UDP] Failed to create socket");
     }
 
-    // Set socket options
-
-    // Allow reusing the address
-    int opt = 1;
-    if (setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
-        spdlog::warn("[UDP] Failed to set socket options");
-    }
-    // Set timeout to avoid blocking indefinitely on accept()
-    struct timeval tv;
-    tv.tv_sec = 0;
-    tv.tv_usec = 100000;  // 100ms
-    if (setsockopt(socket_fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0) {
-        spdlog::warn("[UDP] Failed to set SO_RCVTIMEO on socket");
-    }
+    set_receiver_opts(socket_fd);
 
     // Bind
     sockaddr_in addr{};
@@ -73,4 +60,17 @@ std::vector<uint8_t> UDPReceiver::recv() {
 
     // Return copy of only valid portion of buffer
     return std::vector<uint8_t>(buffer.begin(), buffer.begin() + n);
+}
+
+void UDPReceiver::set_receiver_opts(int fd) {
+    // Allow reusing the address
+    int opt = 1;  // enable
+    if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
+        spdlog::warn("[UDP] Failed to set socket option SO_REUSEADDR");
+    }
+    // Set timeout to avoid blocking indefinitely on recv()
+    struct timeval tv{0, 100000};  // 100ms
+    if (setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0) {
+        spdlog::warn("[UDP] Failed to set SO_RCVTIMEO on socket");
+    }
 }
