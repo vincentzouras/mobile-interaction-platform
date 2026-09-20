@@ -6,6 +6,7 @@ Software automation platform that uses computer vision to plan smartphone intera
 
 - [Overview](docs/overview.md)
 - [Requirements](docs/requirements.md)
+- [Decisions](docs/decisions.md)
 
 ## Hardware
 
