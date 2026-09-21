@@ -51,7 +51,7 @@ int main() {
                 spdlog::info("[TCP Thread] Received: {}",
                              std::string(command.begin(), command.end()));
 
-                tcp_server.send(std::vector<uint8_t>({'O', 'K', '\n'}));
+                tcp_server.send(std::vector<uint8_t>({'O', 'K'}));
             }
 
             spdlog::info("[TCP Thread] Stopped.");
@@ -111,6 +111,7 @@ int main() {
 
         // Both jthreads join in their destructors as this scope exits.
         spdlog::info("[Main] Shutting down...");
+
     } catch (const std::exception& e) {
         spdlog::critical("[Main] Critical Error: {}", e.what());
         return 1;
