@@ -12,7 +12,6 @@
 #include "spdlog/spdlog.h"
 
 std::atomic<bool> g_quit{false};
-std::atomic<int> g_last_signal{0};
 
 void init_logging() {
     auto logger = spdlog::stdout_color_mt("mip");
@@ -22,11 +21,11 @@ void init_logging() {
     spdlog::flush_on(spdlog::level::info);
 }
 
-void signal_handler(int signum) {
-    g_quit = true;
-    g_last_signal.store(signum, std::memory_order_relaxed);
-}
+void signal_handler(int) { g_quit = true; }
 
+/// 1. UDP thread: constructs camera, loop grab/send frames
+/// 2. TCP thread: blocks until a command arrives or stop() is called
+/// 3. Main loop: heartbeat, plus Perception/Planning/Motion Control (TODO)
 int main() {
     init_logging();
 
@@ -46,15 +45,18 @@ int main() {
             spdlog::info("[TCP Thread] Started.");
             // Constantly listen for commands from laptop
             while (tcp_server.running) {
-                std::vector<uint8_t> command = tcp_server.recv();  // blocks at most 100ms
-                if (!command.empty()) {
-                    spdlog::info("[TCP Thread] Received: {}",
-                                 std::string(command.begin(), command.end()));
-                    tcp_server.send(std::vector<uint8_t>({'O', 'K', '\n'}));
-                }
+                std::vector<uint8_t> command = tcp_server.recv();  // blocks until stop()
+                if (command.empty()) continue;
+
+                spdlog::info("[TCP Thread] Received: {}",
+                             std::string(command.begin(), command.end()));
+
+                tcp_server.send(std::vector<uint8_t>({'O', 'K', '\n'}));
             }
+
             spdlog::info("[TCP Thread] Stopped.");
         });
+
         std::jthread udp_thread([&udp_tx]() {
             spdlog::info("[UDP Thread] Started.");
 
@@ -104,22 +106,11 @@ int main() {
 
         // Graceful shutdown
 
-        // Tell threads to stop looping
-        tcp_server.running = false;
-        udp_tx.running = false;
+        tcp_server.stop();       // flips running AND wakes a blocked accept()/recv()
+        udp_tx.running = false;  // the UDP thread never blocks on a socket, plain atomic is fine
 
-        // Wait for threads to finish (guaranteed to exit within 100ms due to socket timeouts)
-        // if (tcp_thread.joinable()) {
-        //     tcp_thread.join();
-        // }
-        // if (udp_thread.joinable()) {
-        //     udp_thread.join();
-        // }
-        if (g_last_signal.load(std::memory_order_relaxed) != 0) {
-            spdlog::info("[Main] Interrupt signal ({}) received. Initiating shutdown...",
-                         g_last_signal.load(std::memory_order_relaxed));
-        }
-        spdlog::info("[Main] Joining threads...");
+        // Both jthreads join in their destructors as this scope exits.
+        spdlog::info("[Main] Shutting down...");
     } catch (const std::exception& e) {
         spdlog::critical("[Main] Critical Error: {}", e.what());
         return 1;

@@ -9,7 +9,7 @@ Distributed system using:
 - Arduino running GRBL for motor control of the stylus
 - Laptop for remote control and debug/dev tooling
 
-## Architecture
+## High Level Flow
 
 Perception &rarr; Interaction Planning &rarr; Motion Control &rarr; Physical Actuation
 
@@ -51,23 +51,11 @@ Output: stylus movement and touch
 - Uses X/Y belt driven stepper motors and a servo for Z-axis touch actuator.
 - GRBL firmware interprets G-code and generates stepping/servo signals (pretty much done for me)
 
-## Communication
-
-Laptop needs to receive video stream from RPi.
-
-Dev tooling requires laptop to be able to request the RGB values at a coordinate.
-
-### UDP: Pi &rarr; Laptop
-
-### TCP
-
-Pi server listens for commands like "what color is x,y"
-
-Laptop client sends color and waits for response.
-
 ## Gestures
 
-### G-code Commands
+### G-code Commands (for reference)
+
+- add them here!
 
 ### Primitives
 
@@ -79,15 +67,13 @@ Laptop client sends color and waits for response.
 
 ## Development Tooling
 
-Can't trust the camera stream to
+Can't trust the camera stream from the UDP thread to have reliable RGB values for programming logic into the motion planning layer.
 
 1. Stream video from RPi to laptop for human viewing.
 2. Laptop debug tool lets you click on the displayed phone screen.
-3. Laptop sends screen coordinate to RPi.
+3. Laptop sends screen coordinate to RPi using TCP connection.
 4. RPi samples its own uncompressed frame.
-5. RPi returns color/features/state.
-6. You write game logic against those RPi-side perception functions.
+5. RPi returns color/features/state over TCP.
+6. You write motion planning using the RPi color values.
 
 ## Calibration Workflow
-
-## Coordinate System Mapping

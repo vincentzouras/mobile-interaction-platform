@@ -18,10 +18,14 @@ class TCPServer {
     std::vector<uint8_t> recv();
     bool send(const std::vector<uint8_t>& data);
 
+    void stop();
+
    private:
     std::vector<uint8_t> buffer;
-    int server_fd;
-    int client_fd;
+
+    // Atomic because stop() reads in main while tcp is blocked
+    std::atomic<int> server_fd;
+    std::atomic<int> client_fd;
 
     void set_server_opts(int fd);
 };

@@ -14,9 +14,14 @@
 	"customizations": {
 		"vscode": {
 			"extensions": [
-				"DavidAnson.vscode-markdownlint"
+				"DavidAnson.vscode-markdownlint",
+				"Vizards.deepseek-v4-for-copilot"
 			]
 		}
+	},
+	// expose display to VcXsrv
+	"containerEnv": {
+		"DISPLAY": "host.docker.internal:0"
 	}
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},
