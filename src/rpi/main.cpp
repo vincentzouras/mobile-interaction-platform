@@ -1,13 +1,14 @@
 #include <unistd.h>
 
 #include <csignal>
+#include <opencv2/opencv.hpp>
 #include <thread>
 #include <vector>
 
+#include "net/fragment_sender.h"
 #include "net/tcp_server.h"
 #include "net/udp_transmitter.h"
 #include "perception/camera.h"
-#include "perception/image_sender.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "spdlog/spdlog.h"
 
@@ -63,7 +64,10 @@ int main() {
             Camera camera;
             cv::Mat frame;
 
-            ImageSender img_sender(udp_tx);
+            std::vector<uint8_t> jpeg_buffer;
+            std::vector<int> compression_params = {cv::IMWRITE_JPEG_QUALITY, 80};  // 80% quality
+
+            FragmentSender frag_sender(udp_tx);
 
             // Constantly send most recent camera frame to laptop
             while (udp_tx.running) {
@@ -75,12 +79,14 @@ int main() {
                     spdlog::debug("[UDP Thread] grab_frame took: {} ms", elapsed);
                     start = std::chrono::steady_clock::now();
 
-                    img_sender.send_image(frame);  // SEND IMAGE
+                    // Compress the frame to JPEG, then send the encoded payload
+                    cv::imencode(".jpg", frame, jpeg_buffer, compression_params);
+                    frag_sender.send_payload(jpeg_buffer);
 
                     end = std::chrono::steady_clock::now();
                     elapsed =
                         std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-                    spdlog::debug("[UDP Thread] send_image took: {} ms", elapsed);
+                    spdlog::debug("[UDP Thread] send_payload took: {} ms", elapsed);
                 } else {
                     spdlog::warn("[UDP Thread] Failed to grab frame from camera.");
                 }

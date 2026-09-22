@@ -2,10 +2,11 @@
 
 #include <atomic>
 #include <csignal>
+#include <opencv2/opencv.hpp>
 #include <string>
 #include <thread>
 
-#include "image_receiver.h"
+#include "net/fragment_receiver.h"
 #include "net/tcp_client.h"
 #include "net/udp_receiver.h"
 #include "net/udp_transmitter.h"
@@ -41,14 +42,19 @@ int main() {
         std::jthread udp_thread([&shared_frame, &frame_mutex]() {
             try {
                 UDPReceiver udp_rx;
-                ImageReceiver img_rx(udp_rx);
+                FragmentReceiver frag_rx(udp_rx);
 
                 spdlog::info("[UDP Thread] Started listening for video frames...");
 
+                std::vector<uint8_t> jpeg_buffer;
                 cv::Mat frame;
 
                 while (!g_quit) {
-                    if (img_rx.receive_image(frame)) {
+                    if (frag_rx.receive_payload(jpeg_buffer)) {
+                        // Decode the reassembled JPEG payload
+                        frame = cv::imdecode(jpeg_buffer, cv::IMREAD_COLOR);
+                        if (frame.empty()) continue;
+
                         std::lock_guard<std::mutex> lock(frame_mutex);
                         frame.copyTo(shared_frame);
                     }

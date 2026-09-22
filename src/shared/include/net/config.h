@@ -2,13 +2,13 @@
 #include <cstdint>
 #include <string_view>
 
-// Packet header for UDP image fragments since they exceed payload size allowed by UDP
+// Packet header for UDP payload fragments since payloads exceed size allowed by UDP
 #pragma pack(push, 1)  // force 1-byte alignment, no padding
-struct ImageFragmentHeader {
-    uint32_t frame_id;         // Unique ID for the current frame (e.g., increments by 1)
+struct FragmentHeader {
+    uint32_t frame_id;         // Unique ID for the current message (e.g., increments by 1)
     uint16_t fragment_id;      // The index of this specific chunk (0, 1, 2, ...)
-    uint16_t total_fragments;  // Total chunks expected for this frame
-    uint16_t payload_size;     // Size of the actual image data in this specific packet
+    uint16_t total_fragments;  // Total chunks expected for this message
+    uint16_t payload_size;     // Size of the actual payload data in this specific packet
 };
 #pragma pack(pop)
 
@@ -24,5 +24,5 @@ inline constexpr size_t OS_PAGE_SIZE = 4096;
 
 // size of WireGuard tunnel MTU (max transmission unit)
 inline constexpr size_t MAX_UDP_PACKET_PAYLOAD = 1150;
-inline constexpr int MAX_FRAGMENT_DATA_SIZE = MAX_UDP_PACKET_PAYLOAD - sizeof(ImageFragmentHeader);
+inline constexpr int MAX_FRAGMENT_DATA_SIZE = MAX_UDP_PACKET_PAYLOAD - sizeof(FragmentHeader);
 }  // namespace net
