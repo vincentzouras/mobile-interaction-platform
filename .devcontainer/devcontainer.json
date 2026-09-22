@@ -15,7 +15,8 @@
 		"vscode": {
 			"extensions": [
 				"DavidAnson.vscode-markdownlint",
-				"Vizards.deepseek-v4-for-copilot"
+				"Vizards.deepseek-v4-for-copilot",
+				"eamodio.gitlens"
 			]
 		}
 	},
